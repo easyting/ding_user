@@ -391,7 +391,7 @@ function ding_user_user_login_validate($form, &$form_state) {
       // profile, or themselves in the profile_init callback.
       ding_user_save_creds($auth_res, $account);
 
-      $profile = _ding_user_create_profile2($account);
+      //$profile = _ding_user_create_profile2 ($account);
 
       // set additional tabs in profile2
       _ding_user_profile2_tabs($account);
@@ -537,6 +537,7 @@ function ding_user_form_profile2_form_alter(&$form, &$form_state) {
   $profile_tabs = module_invoke_all('user_profile2_tabs');
   foreach ( $profile_tabs as $profile_tab ) {
     if ($form['#user_category'] == $profile_tab->type) {
+      $form['#title'] = $profile_tab->label;	
       // unset account info (password and pincode)
       unset($form['account']);
       $form += drupal_get_form($profile_tab->form);
@@ -652,13 +653,6 @@ function ding_user_get_creds($account = NULL) {
   if (user_is_logged_in() && sizeof($roles) == 1 && $roles[0] == 'authenticated user') {
     // unless we're using persistent login, and they have a persistent login cookie.
     if (module_exists('ding_persistent_login') && $creds = ding_persistent_login_get_creds($account->uid)) {
-      return $creds;
-    }
-
-    if (isset($account->data['password']) && $account->data['password'] == 'reset') {
-      unset($account->data['password']);
-      $creds = array('username' => $account->mail, 'password' => '');
-      ding_user_save_creds(array('creds' => $creds), $account);
       return $creds;
     }
 
