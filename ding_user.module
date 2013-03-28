@@ -73,20 +73,20 @@ function ding_user_menu_alter(&$items) {
 
 /**
  * Implements hook_page_manager_contexts_alter().
- * 
- * This is actually a Panels everywhere hook. In future it may be renamed: 
+ *
+ * This is actually a Panels everywhere hook. In future it may be renamed:
  * hook_panels_everywhere_contexts_alter()
- * 
- * Panels everywhere puts a extra form tag around the whole page on some pages. 
+ *
+ * Panels everywhere puts a extra form tag around the whole page on some pages.
  * This is wrong because there already is a form tag which creates an illegal html markup
  * with nested form tag.
- * 
+ *
  * This happens because Panels Everwhere reuses code from panels. Because there exist a form in
  * contexts the function function panels_render_display() puts an extra form around the code.
- * 
+ *
  * The code unsets the form_id in panels everywhere module order to supress the superfluous form tag
- * See Panels module: function panels_render_display() 
- * 
+ * See Panels module: function panels_render_display()
+ *
  */
 function ding_user_page_manager_contexts_alter(&$contexts, $placeholders) {
   foreach ($contexts as $id => $context) {
@@ -709,6 +709,8 @@ function ajax_command_ding_user_authenticate($extra_data) {
   global $user, $language;
   // @todo add support for user/login here.
   module_load_include('inc', 'ding_user', 'ding_user.pages');
+  drupal_add_js(drupal_get_path('module', 'ding_user') . '/js/ding_user.scripts.js', 'file');
+
   if ($user->uid) {
     $title = t('Authenticate');
     $form_id = 'ding_user_authenticate_form';
@@ -761,6 +763,15 @@ function ding_user_authenticate_form_callback($form, &$form_state) {
   if ($success) {
     // Close dialog if successful.
     $response['#commands'][] = ajax_command_ding_popup_close('ding_user');
+
+    // Get the login block related pieces and update the area via AJAX cmd's.
+    $blocks = array();
+    $blocks['ding_username'] = block_load('ding_user_frontend', 'ding-username');
+    $blocks['ding_user_loan_number'] = block_load('ding_user_frontend', 'ding-user-loan-number');
+    $blocks['user_menu'] = block_load('system', 'user-menu');
+    $response['#commands'][] = ajax_command_html('.region-user-second-inner', render(_block_get_renderable_array(_block_render_blocks($blocks))));
+    $response['#commands'][] = ajax_command_ding_user_update_login();
+
   }
   else {
     // Else redisplay form and messages.
@@ -769,6 +780,19 @@ function ding_user_authenticate_form_callback($form, &$form_state) {
   }
 
   return $response;
+}
+
+/**
+ * Defines a custom AJAX command to fire necessary logic upon the login
+ * block.
+ *
+ * @return Array
+ *   AJAX-related custom command.
+ */
+function ajax_command_ding_user_update_login() {
+  return array(
+    'command' => 'ding_user_update_login',
+  );
 }
 
 /**
