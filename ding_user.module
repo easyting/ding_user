@@ -246,7 +246,7 @@ function ding_user_account_form_validate($form, &$form_state) {
   // Test whether the e-mail address should be disguised.
   $mail = ding_user_is_shared_email($form, $form_state);
   if ($mail) {
-    $form_state['values']['mail'] = 'dingusermail_'. $mail;
+    $form_state['values']['mail'] = 'dingusermail_' . $mail;
   }
 
   // Call the User module's validate function.
@@ -321,14 +321,12 @@ function ding_user_form_process_password_confirm($element) {
  */
 function ding_user_create_profile_type($provider) {
   $provider_profile_type = 'provider_' . $provider['module'];
-  $profile_type = new ProfileType(
-    array(
-      'type' => $provider_profile_type,
-      'label' => 'Provider profile for ' . $provider['title'],
-      'userCategory' => TRUE,
-      'userView' => TRUE,
-    )
-  );
+  $profile_type = new ProfileType(array(
+    'type' => $provider_profile_type,
+    'label' => 'Provider profile for ' . $provider['title'],
+    'userCategory' => TRUE,
+    'userView' => TRUE,
+  ));
   $profile_type->save();
   return $profile_type;
 }
@@ -521,7 +519,7 @@ function ding_user_user_login_validate($form, &$form_state) {
 
       // Let provider initialise the profile. Assume they save it if need be.
       if (ding_provider_implements('user', 'profile_init')) {
-        $profile = _ding_user_create_profile2 ($account);
+        $profile = _ding_user_create_profile2($account);
         ding_provider_invoke('user', 'profile_init', $profile, $auth_res);
       }
 
@@ -547,7 +545,8 @@ function ding_user_user_login_validate($form, &$form_state) {
         }
       }
     }
-  } catch (Exception $e) {
+  }
+  catch (Exception $e) {
     // Exception thrown, log error and carry on.
     watchdog('ding_user', 'Provider exception, message: @message', array('@message' => $e->getMessage()), WATCHDOG_ERROR);
   }
@@ -626,24 +625,20 @@ function _ding_user_profile2_tabs($account) {
     $profile_type = profile2_get_types($profile_tab->type);
     // special case - profile_type has not yet been created
     if (!$profile_type) {
-      $profile_type = new ProfileType(
-        array(
-          'type' => $profile_tab->type,
-          'label' => $profile_tab->label,
-          'userCategory' => TRUE,
-          'userView' => TRUE,
-        )
-      );
+      $profile_type = new ProfileType(array(
+        'type' => $profile_tab->type,
+        'label' => $profile_tab->label,
+        'userCategory' => TRUE,
+        'userView' => TRUE,
+      ));
       $profile_type->save();
     }
     // normal case; get the profile type
     // Create a profile for current user.
-    $profile = new Profile(
-      array(
-        'user' => $account,
-        'type' => $profile_type,
-      )
-    );
+    $profile = new Profile(array(
+      'user' => $account,
+      'type' => $profile_type,
+    ));
     // Bind profile to user.
     $profile->save();
   }
@@ -669,7 +664,7 @@ function ding_user_form_profile2_form_alter(&$form, &$form_state) {
             }
           }
           elseif (!empty($profile_tab->form)) {
-            $form+=drupal_get_form($profile_tab->form);
+            $form += drupal_get_form($profile_tab->form);
           }
           drupal_set_title($form['#title']);
         }
@@ -689,12 +684,10 @@ function _ding_user_create_profile2($account) {
       $profile_type = ding_user_create_profile_type($provider);
     }
     // Create a profile for current user.
-    $profile = new Profile(
-      array(
-        'user' => $account,
-        'type' => $profile_type,
-      )
-    );
+    $profile = new Profile(array(
+      'user' => $account,
+      'type' => $profile_type,
+    ));
 
     // Bind this profile to the user.
     $profile->save();
@@ -831,7 +824,10 @@ function ding_user_get_creds($account = NULL) {
 
     if (isset($account->data['password']) && $account->data['password'] == 'reset') {
       unset($account->data['password']);
-      $creds = array('username' => $account->mail, 'password' => '');
+      $creds = array(
+        'username' => $account->mail,
+        'password' => ''
+      );
       ding_user_save_creds(array('creds' => $creds), $account);
       return $creds;
     }
@@ -849,8 +845,8 @@ function ding_user_get_creds($account = NULL) {
 }
 
 /**
-  * Update account with information from provider.
-  */
+ * Update account with information from provider.
+ */
 function ding_user_update_user($auth_res, &$account) {
   foreach ($auth_res['user'] as $key => $value) {
     if ($key == 'data') {
@@ -872,8 +868,8 @@ function ding_user_update_user($auth_res, &$account) {
 }
 
 /**
-  * Cache user creds locally.
-  */
+ * Cache user creds locally.
+ */
 function ding_user_save_creds($auth_res, $account) {
   if (isset($auth_res['creds'])) {
     cache_set(session_name() . '-' . $account->uid, $auth_res['creds'], 'cache_ding_user_credentials', REQUEST_TIME + variable_get('ding_user_creds_lifetime', DING_USER_DEFAULT_CREDS_LIFETIME));
@@ -903,7 +899,7 @@ function ding_user_is_provider_user($account) {
   return !empty($names);
 }
 
-include_once('ding_user_comments.inc');
+include_once ('ding_user_comments.inc');
 
 /**
  * Implementing specific cache for DingUserCredentials due to the fact that
