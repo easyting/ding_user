@@ -758,9 +758,9 @@ function ding_user_authenticate_form_callback($form, &$form_state) {
 
     // Update the user login box.
     if (module_exists('artesis_backend')) {
-      $resfresh_commands = artesis_backend_refresh_login();
+      $refresh_commands = artesis_backend_refresh_login();
 
-      foreach ($resfresh_commands as $command) {
+      foreach ($refresh_commands as $command) {
         $response['#commands'][] = $command;
       }
     }
