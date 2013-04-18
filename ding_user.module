@@ -756,6 +756,7 @@ function ding_user_authenticate_form_callback($form, &$form_state) {
     // Close dialog if successful.
     $response['#commands'][] = ajax_command_ding_popup_close('ding_user');
 
+    // Update the user login box.
     if (module_exists('artesis_backend')) {
       $resfresh_commands = artesis_backend_refresh_login();
 
