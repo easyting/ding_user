@@ -962,3 +962,14 @@ class DingUserCredentialsCache extends DrupalDatabaseCache {
 
 }
 
+/**
+ * Implements hook_TYPE_load().
+ * Use actual user name instead of the hash.
+ */
+function ding_user_comment_load($comments) {
+  foreach ($comments as $comment) {
+    if (!empty($comment->data['display_name'])) {
+      $comment->name = $comment->data['display_name'];
+    }
+  }
+}
