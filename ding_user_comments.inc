@@ -11,7 +11,7 @@
  * Hook is implented to alter the 'log in to add comment' part of comments
  * define a new theme for comments if ['comment_forbidden'] is set
  */
-function ding_user_entity_view($comment, $type, $view_mode, $langcode ) {
+function ding_user_entity_view($comment, $type, $view_mode, $langcode) {
   if (isset($comment->content['links']['comment']['#links']['comment_forbidden'])) {
     $comment->content['links']['comment']['#theme'] = 'ding_user_comment_post_forbidden';
   }
@@ -92,5 +92,8 @@ function ding_user_comment_forbidden_form_callback($form, $form_state) {
 
   $commands = array();
   $commands[] = ctools_ajax_command_redirect($base_root . $form['#action']);
-  return array('#type' => 'ajax', '#commands' => $commands);
+  return array(
+    '#type' => 'ajax',
+    '#commands' => $commands
+  );
 }
