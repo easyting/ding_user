@@ -489,7 +489,7 @@ function _ding_user_update_old_accounts($hash) {
   // Load user account using old hash.
   $account_old = user_external_load($auth_name_old);
   // Proceed only in the case it exists and needs to be updated.
-  if ($account_old && strlen($account_old->init) == 96) {
+  if ($account_old) {
     // Create new hash.
     $auth_name_new = _password_base64_encode($hash, drupal_strlen($hash)) . '@ding_user';
     $account_new = user_external_load($auth_name_new);
