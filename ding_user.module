@@ -473,7 +473,52 @@ function ding_user_default_authname($name) {
    * characters, leaving enough room for our suffix.
    */
   $hash = hash('sha512', drupal_get_private_key() . $name, TRUE);
+  _ding_user_update_old_accounts($hash);
   return _password_base64_encode($hash, drupal_strlen($hash)) . '@ding_user';
+}
+
+/**
+ * FE user accounts created under 1.9.6 version have a different authname hash.
+ * This method updates the hash, and will become deprecated after a while.
+ */
+function _ding_user_update_old_accounts($hash) {
+  // Create authname hash using old workflow (the difference is in strlen VS drupal_strlen.
+  $auth_name_old = _password_base64_encode($hash, strlen($hash)) . '@ding_user';
+  $auth_name_new = _password_base64_encode($hash, drupal_strlen($hash)) . '@ding_user';
+  // Load user account using old hash.
+  $account_old = user_external_load($auth_name_old);
+  // Proceed only in the case it exists and needs to be updated.
+  if ($account_old) {
+    // Create new hash.
+    $account_new = user_external_load($auth_name_new);
+    // Update old account only when there is no new account for the same user.
+    if (!$account_new) {
+      $updated = db_update('authmap')
+        ->fields(array(
+          'authname' => $auth_name_new,
+        ))
+        ->condition('authname', $auth_name_old, '=')
+        ->execute();
+      $updated = db_update('users')
+        ->fields(array(
+          'init' => $auth_name_new,
+        ))
+        ->condition('uid', $account_old->uid, '=')
+        ->execute();
+    }
+  }
+  else {
+    $account_new = user_external_load($auth_name_new);
+
+    if ($account_new) {
+      db_update('users')
+        ->fields(array(
+          'init' => $auth_name_new,
+        ))
+        ->condition('uid', $account_new->uid, '=')
+        ->execute();
+    }
+  }
 }
 
 /**
@@ -963,13 +1008,74 @@ class DingUserCredentialsCache extends DrupalDatabaseCache {
 }
 
 /**
- * Implements hook_TYPE_load().
+ * Implements hook_comment_load().
+ *
  * Use actual user name instead of the hash.
  */
 function ding_user_comment_load($comments) {
+  $user_names = array();
+
+  // Get comment authors.
+  $uids = array();
   foreach ($comments as $comment) {
-    if (!empty($comment->data['display_name'])) {
-      $comment->name = $comment->data['display_name'];
+    if ($comment->uid == 0) {
+      continue;
+    }
+    $uids[] = $comment->uid;
+  }
+  $uids = array_unique($uids);
+  // Map uid => key.
+  $uids_rev = array_flip($uids);
+
+  // Get user names from cache.
+  $cids = array_map('_ding_user_comment_cache_id', $uids);
+  $caches = cache_get_multiple($cids);
+  foreach ($caches as $cache) {
+    $data = $cache->data;
+    $user_names[$data[0]] = $data[1];
+    unset($uids[$uids_rev[$data[0]]]);
+  }
+
+  // Get names from db.
+  if (!empty($uids)) {
+    $data = db_select('users', 'u')
+      ->fields('u', array('uid', 'data'))
+      ->isNotNull('u.data')
+      ->condition('u.uid', $uids)
+      ->execute()
+      ->fetchAll(PDO::FETCH_ASSOC);
+
+    foreach ($data as $row) {
+      $user_data = unserialize($row['data']);
+      if (empty($user_data['display_name'])) {
+        $data = array($row['uid'], NULL);
+      }
+      else {
+        $data = array($row['uid'], $user_data['display_name']);
+      }
+      cache_set(_ding_user_comment_cache_id($row['uid']), $data);
+      $user_names[$data[0]] = $data[1];
     }
   }
+
+  // Set proper user names.
+  foreach ($comments as $comment) {
+    if (empty($user_names[$comment->uid])) {
+      continue;
+    }
+    $comment->name = $user_names[$comment->uid];
+  }
+}
+
+/**
+ * Get cache id by uid.
+ *
+ * @param int $uid
+ *   Comment author uid.
+ *
+ * @return string
+ *   Cache ID.
+ */
+function _ding_user_comment_cache_id($uid) {
+  return 'ding_user_comment_user_name:' . $uid;
 }
