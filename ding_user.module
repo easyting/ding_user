@@ -486,12 +486,12 @@ function ding_user_default_authname($name) {
 function _ding_user_update_old_accounts($hash) {
   // Create authname hash using old workflow (the difference is in strlen VS drupal_strlen.
   $auth_name_old = _password_base64_encode($hash, strlen($hash)) . '@ding_user';
+  $auth_name_new = _password_base64_encode($hash, drupal_strlen($hash)) . '@ding_user';
   // Load user account using old hash.
   $account_old = user_external_load($auth_name_old);
   // Proceed only in the case it exists and needs to be updated.
   if ($account_old) {
     // Create new hash.
-    $auth_name_new = _password_base64_encode($hash, drupal_strlen($hash)) . '@ding_user';
     $account_new = user_external_load($auth_name_new);
     // Update old account only when there is no new account for the same user.
     if (!$account_new) {
@@ -506,6 +506,18 @@ function _ding_user_update_old_accounts($hash) {
           'init' => $auth_name_new,
         ))
         ->condition('uid', $account_old->uid, '=')
+        ->execute();
+    }
+  }
+  else {
+    $account_new = user_external_load($auth_name_new);
+
+    if ($account_new) {
+      db_update('users')
+        ->fields(array(
+          'init' => $auth_name_new,
+        ))
+        ->condition('uid', $account_new->uid, '=')
         ->execute();
     }
   }
