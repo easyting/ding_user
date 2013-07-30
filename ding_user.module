@@ -519,6 +519,7 @@ function _ding_user_update_old_accounts($hash) {
         ->execute();
     }
   }
+  entity_get_controller('user')->resetCache();
 }
 
 /**
