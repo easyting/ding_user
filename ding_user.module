@@ -828,8 +828,10 @@ function ding_user_authenticate_form_callback($form, &$form_state) {
  * @param $account The user to get creds for.
  */
 function ding_user_get_creds($account = NULL) {
+  global $user;
+
   if (!$account) {
-    $account = $GLOBALS['user'];
+    $account = $user;
   }
   if ($cache = cache_get(session_name() . '-' . $account->uid, 'cache_ding_user_credentials')) {
     // Check that the credentials is valid.
@@ -845,10 +847,10 @@ function ding_user_get_creds($account = NULL) {
     }
   }
 
-  $roles = array_values($GLOBALS['user']->roles);
+  $roles = array_values($user->roles);
 
   // Log out user who are authenticated but has no other roles (i.e. ding user)
-  if (user_is_logged_in() && sizeof($roles) == 1 && $roles[0] == 'authenticated user') {
+  if (user_is_logged_in() && sizeof($roles) == 1 && $roles[0] == 'authenticated user' && $user->uid != 1) {
     // unless we're using persistent login, and they have a persistent login cookie.
     if (module_exists('ding_persistent_login') && $creds = ding_persistent_login_get_creds($account->uid)) {
       return $creds;
