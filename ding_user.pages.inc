@@ -67,7 +67,7 @@ function ding_user_authenticate_form_validate($form, &$form_state) {
   global $user;
   $auth_res = ding_provider_invoke('user', 'authenticate', $form_state['values']['name'], $form_state['values']['pass']);
   if (!is_array($auth_res) || !isset($auth_res['success'])) {
-    watchdog('ding_user', 'Provider returned invalid result: @res', array('@res' => print_r($auth_res, TRUE)), WATCHDOG_DEBUG);
+    watchdog('ding_user', 'Error when invoking provider authentication.', array(), WATCHDOG_DEBUG);
     form_error($form, t("Internal error, please try again later."));
     return;
   }
@@ -91,7 +91,7 @@ function ding_user_authenticate_form_validate($form, &$form_state) {
   }
   if (!$form_state['authentication_success']) {
     form_set_error('name', t('Sorry, authentication failed, did you type the right username and password?'));
-    watchdog('user', 'Authentication attempt failed for %uid.', array('%user' => $user->uid));
+    watchdog('ding_user', 'Authentication attempt failed for %uid.', array('%user' => $user->uid));
   }
 }
 
