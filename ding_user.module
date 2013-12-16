@@ -67,7 +67,6 @@ function ding_user_menu_alter(&$items) {
 
   $items['user/%user/view']['title'] = t('User profile');
   $items['user/%user/edit']['title'] = t('Edit user profile');
-  $items['user/%pm_arg/status']['title'] = t('User status');
 }
 
 
@@ -537,7 +536,7 @@ function ding_user_user_login_validate($form, &$form_state) {
   try {
     $auth_res = ding_provider_invoke('user', 'authenticate', $form_state['values']['name'], $form_state['values']['pass']);
     if (!is_array($auth_res) || !isset($auth_res['success'])) {
-      watchdog('ding_user', 'Provider returned invalid result: @res', array('@res' => print_r($auth_res, TRUE)), WATCHDOG_DEBUG);
+      watchdog('ding_user', 'Error when invoking provider authentication.', array(), WATCHDOG_DEBUG);
       return;
     }
 
