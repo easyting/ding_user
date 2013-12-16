@@ -591,6 +591,9 @@ function ding_user_user_login_validate($form, &$form_state) {
       }
     }
   }
+  catch (DingProviderUserException $e) {
+    drupal_set_message(check_plain($e->getMessage()), 'error');
+  }
   catch (Exception $e) {
     // Exception thrown, log error and carry on.
     watchdog('ding_user', 'Provider exception, message: @message', array('@message' => $e->getMessage()), WATCHDOG_ERROR);
